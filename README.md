@@ -63,16 +63,6 @@ Detailed engineering documentation is available in the [`docs/`](docs/) director
 
 ---
 
-## Why This Board Was Chosen
-
-1. **Cortex-M33 Processing Efficiency:** The Arm Cortex-M33 processor delivers high computational performance with low power draw, making it well suited for 24/7 edge automation.
-2. **Direct Die Temperature Sensing:** The internal silicon temperature diode inside the analog converter measures chip temperature directly without requiring any external temperature probe.
-3. **Hardware Audio Decimation:** The hardware MICFIL audio filter decodes digital sound directly from the onboard PDM microphone, calculating relative noise levels in hardware without loading the CPU.
-4. **Dedicated High Speed Flash Bus:** The high speed SPI bus connects directly to the 64 Mbit external flash chip, providing reliable non-volatile storage for cryptographic audit chains and offline telemetry buffering.
-5. **All-in-One USB-C Debug Probe:** The built in MCU-Link probe handles both code flashing and serial telemetry over a single standard USB-C cable, keeping the physical setup simple and tidy.
-
----
-
 ## Transparency: What is Real Hardware vs. What is Simulated
 
 To maintain complete engineering honesty, here is an exact explanation of which parts of the system run on physical silicon and which parts are simulated as software digital twins.
@@ -82,7 +72,7 @@ To maintain complete engineering honesty, here is an exact explanation of which 
 | **Lighting Brightness and Color** | **Real Hardware** | Microcontroller | The physical tri-color RGB LED on the board is driven by three hardware PWM channels from CTIMER3. Changing the dimmer slider or color swatch in the dashboard updates the physical light duty cycle in real time. |
 | **Room Vibration and Movement** | **Real Hardware** | Microcontroller | The onboard FXLS8974CF digital accelerometer continuously reads real physical acceleration across three axes over I2C. Gently tapping the desk or moving the board triggers real motion events. |
 | **Fall and Impact Detection** | **Real Hardware** | Microcontroller | The FreeRTOS firmware monitors accelerometer readings for a rapid drop in gravity under 400 mg followed by a sharp impact spike over 1800 mg within 600 ms, triggering a local safety alert. |
-| **Ambient Light Index** | **Real Hardware** | Microcontroller | The physical Q2 ALS-PT19 phototransistor captures room illumination and scales it through the LPADC analog converter into an uncalibrated relative light index (0 to 255). Covering the board with your hand drops the reading immediately. |
+| **Ambient Light Index** | **Real Hardware** | Microcontroller | The physical Q2 ALS-PT19 phototransistor captures room illumination and scales it through the LPADC analog converter (computed as volts x 600 against the 1.8V reference, producing a relative index roughly between 0 and 1000). Covering the board with your hand drops the reading immediately. |
 | **Silicon Die Temperature** | **Real Hardware** | Microcontroller | The physical temperature diode inside the MCXN236 silicon is read through LPADC channel 26. It reflects the operating temperature of the chip, typically reading around 29 degrees Celsius in room air. |
 | **Ambient Room Noise** | **Real Hardware** | Microcontroller | The onboard digital PDM microphone is sampled by the hardware MICFIL peripheral, calculating an uncalibrated relative sound level indicator on a 30 to 80 dB scale. Clapping or speaking near the board raises the reading live. |
 | **Audit Log Hash Chain** | **Real Hardware** | Microcontroller | Every state change, user command, and alert is stored inside a 128 KB circular ring (4,096 slots) on the physical Winbond W25Q64 external SPI flash chip. Each record contains an unkeyed SHA-256 hash linked to the previous entry to ensure modifications are tamper-evident. |

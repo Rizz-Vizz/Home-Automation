@@ -38,7 +38,7 @@ Every command sent from the gateway to the microcontroller includes an HMAC-SHA2
    sig = HMAC-SHA256(DeviceKey, Canonical)
    ```
 4. **Anti-Replay Mechanism:**
-   1. The microcontroller maintains a volatile 32-bit `bootNonce` generated at each reset from hardware timing jitter.
+   1. The microcontroller maintains a volatile 32-bit `bootNonce` derived on startup from the flash audit log sequence counter, which increments on every boot (falling back to SysTick hardware timer jitter only if flash is uninitialized). The critical security property is per-session uniqueness.
    2. The microcontroller tracks a strictly monotonic `last_seq` counter.
    3. Any incoming frame with `seq <= last_seq` is immediately dropped with error code `AUTH_ERR_REPLAY`.
    4. If the microcontroller reboots, its new `bootNonce` invalidates all previously signed frames.
@@ -51,7 +51,7 @@ Every command sent from the gateway to the microcontroller includes an HMAC-SHA2
 | :--- | :--- | :--- | :--- |
 | `light` | `0` to `100` / `on` / `off` | Guest | Controls the main living room CTIMER3 RGB PWM illumination level. |
 | `rgb` | Hex color code `RRGGBB` | Guest | Sets custom RGB PWM tint across the physical tri-color LED channels. |
-| `fan` | `0` to `100` / `on` / `off` | Guest | Controls ceiling fan speed across discrete power steps. |
+| `fan` | `0` to `100` / `on` / `off` | Family | Controls bedroom ceiling fan speed across discrete power steps. |
 | `emergency` | *(none)* | Guest | Triggers emergency shutdown of non-essential loads. Available to all roles. |
 | `ac` | `16` to `30` / `cool` / `heat` | Family | Configures bedroom inverter air conditioning temperature and operating mode. |
 | `eco` | `on` / `off` | Family | Toggles eco mode preset, capping peak load draw across major appliances. |
@@ -124,7 +124,7 @@ The microcontroller outputs a continuous 1 Hz telemetry frame over serial:
 4. `edge`: Boolean indicating whether board is currently in offline Amber Edge Mode.
 5. `safety`: Boolean indicating if a safety trip is currently latched.
 6. `safety_reason`: Human-readable identifier describing the trip trigger condition.
-7. `lux`: Scaled 0 to 255 ambient light index from the on-board phototransistor.
+7. `lux`: Relative ambient light index (computed as volts x 600 against 1.8V reference, producing an index roughly between 0 and 1000) from the on-board phototransistor.
 8. `temp_c`: Internal silicon die temperature in degrees Celsius from the ADC temperature sensor.
 9. `db`: Relative sound level indicator on a 30 to 80 dB scale from the PDM microphone decimation filter.
 10. `ax`, `ay`, `az`: Raw milli-g acceleration vectors from the InvenSense 6-axis IMU.

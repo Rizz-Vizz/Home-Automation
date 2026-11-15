@@ -30,7 +30,8 @@ Home Automation implements strict role-based access control across all tiers of 
 | Endpoint | Method | Owner | Family | Guest | Enforcement Logic |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `/api/snapshot` | GET | Full | Full (No Audit) | Filtered | Guest snapshot contains only Living Room appliances; audit, vision, and rule arrays are stripped. |
-| `/api/telemetry` | GET | Allowed | Allowed | Allowed | Returns recent historical telemetry trends. |
+| `/api/telemetry` | GET | Allowed | Allowed | 403 Forbidden | Telemetry history is restricted to Family and Owner. |
+| `/api/energy/daily` | GET | Allowed | Allowed | 403 Forbidden | Whole-home historical consumption is restricted to Family and Owner. |
 | `/api/audit` | GET | Allowed | 403 Forbidden | 403 Forbidden | Access to the SPI flash and SQLite audit log is strictly restricted to Owner. |
 | `/api/alerts` | GET | Allowed | Allowed | 403 Forbidden | System safety and overload alerts are hidden from Guest sessions. |
 | `/api/rules` | GET | Allowed | Allowed | 403 Forbidden | Rule policies can only be viewed by Family and Owner. |

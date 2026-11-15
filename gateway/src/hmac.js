@@ -10,16 +10,16 @@ export const MCU_CMDS = new Set([
 ]);
 
 const FW_DIAG = new Set(["ping", "audit_dump", "backfill_sync", "can_diag", "flash_id"]);
-const FW_GUEST = new Set(["light", "rgb", "fan", "emergency"]);
-const FW_FAMILY = new Set(["ac", "eco", "all_off", "night", "alert_test"]);
+const FW_GUEST = new Set(["light", "rgb", "emergency"]);
+const FW_FAMILY = new Set(["fan", "ac", "eco", "all_off", "night", "alert_test"]);
 const FW_SYSTEM = new Set(["heartbeat", "trip"]);
 
 /* Only the gateway itself may send these, never an HTTP or MQTT client */
 const INTERNAL_ONLY = new Set(["heartbeat", "trip"]);
 
-const GATEWAY_GUEST = new Set(["plug_tv", "lamp_living", "lamp_bed", "lights_off", "emergency_stop"]);
+const GATEWAY_GUEST = new Set(["plug_tv", "lamp_living", "lights_off", "emergency_stop"]);
 const GATEWAY_FAMILY = new Set([
-  "ac_config", "plug_kettle", "plug_desk", "pad_tx", "fridge_door", "peak_demo",
+  "fan_bed", "lamp_bed", "ac_config", "plug_kettle", "plug_desk", "pad_tx", "fridge_door", "peak_demo",
   "night_mode", "room_toggle", "suggestion_approve", "suggestion_dismiss", "energy_saver",
 ]);
 

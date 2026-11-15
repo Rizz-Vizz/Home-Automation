@@ -11,13 +11,13 @@
 3. **Replay and Re-order Protection:**
    Replay attacks are defeated via two distinct layers:
    1. Monotonic Sequence Counter: The microcontroller drops any packet with an equal or lower sequence number than the previously accepted command.
-   2. Ephemeral Boot Nonce: When power cycled or rebooted, the microcontroller generates a new random boot nonce from hardware timing jitter, immediately invalidating any command signatures created in prior sessions.
+   2. Ephemeral Boot Nonce: When power cycled or rebooted, the microcontroller initializes a new session boot nonce derived from the flash audit log sequence counter, which increments on every boot (falling back to SysTick hardware timer jitter only if flash is uninitialized). The critical security property is per-session uniqueness, immediately invalidating any command signatures created in prior sessions.
 
 4. **Timing-Safe Authentication:**
    PIN codes entered on the web dashboard are verified using constant-time string comparisons (`crypto.timingSafeEqual`) on the gateway service to prevent timing-based side-channel attacks.
 
 5. **Automatic Rate Limiting and Lockout:**
-   The gateway enforces a lockout policy where five consecutive failed PIN verification attempts trigger an automatic temporary lockout to prevent brute-force attacks.
+   The gateway enforces a lockout policy where five consecutive failed PIN verification attempts trigger an automatic temporary lockout to prevent brute-force attacks. Because the gateway listens exclusively on `localhost` (`127.0.0.1`), all local browser clients share this single IP rate-limiting counter.
 
 6. **Tamper-Evident Audit Logging:**
    Every system event, button trigger, and safety trip is recorded into external Winbond W25Q64 SPI flash memory. Each record contains an unkeyed SHA-256 hash that links to the hash of the preceding record, forming an append-only hash chain. Any retroactive modification or deletion breaks the hash chain continuity and is detected during synchronization.
@@ -38,7 +38,7 @@ To maintain complete engineering honesty and transparency, the following archite
    The SPI flash audit log uses an unkeyed SHA-256 hash chain. This makes the log **tamper-evident** (modifications to existing records are immediately detectable), but not mathematically tamper-proof against an adversary who gains write access to the flash chip and recalculates the entire hash chain from the point of modification forward.
 
 4. **Sensor Calibration Boundaries:**
-   1. Ambient Light: The on-board phototransistor circuit produces an uncalibrated relative illumination index scaled from 0 to 255. It is not an instrument-grade photometric lux meter.
+   1. Ambient Light: The on-board phototransistor circuit produces an uncalibrated relative illumination index (computed as volts x 600 against the 1.8V reference, producing a reading roughly between 0 and 1000). It is not an instrument-grade photometric lux meter.
    2. Acoustic Noise: The PDM microphone outputs decimation filter levels mapped to a relative 30 to 80 dB scale. It serves as an acoustic activity indicator, not a calibrated sound pressure level (SPL) meter.
    3. Power Readings: Active wattage and energy totals for virtual appliances are calculated using mathematical load models and firmware state synchronization rather than individual physical inline CT current transformers.
 

@@ -47,6 +47,10 @@ test("RBAC: safety stays open to everyone, risky controls do not, internals are 
   assert.equal(isRoleAllowed("family", "privacy", "off"), true);
   assert.equal(isRoleAllowed("guest", "light"), true);
   assert.equal(isRoleAllowed("guest", "lights_off"), true);
+  assert.equal(isRoleAllowed("guest", "fan"), false);
+  assert.equal(isRoleAllowed("guest", "lamp_bed"), false);
+  assert.equal(isRoleAllowed("family", "fan"), true);
+  assert.equal(isRoleAllowed("family", "lamp_bed"), true);
   assert.equal(isRoleAllowed("guest", "away_disarm"), false);
   assert.equal(isRoleAllowed("guest", "pad_tx"), false);
   assert.equal(isRoleAllowed("guest", "audit_dump"), false);
@@ -197,16 +201,23 @@ test("Gateway: login, server-side roles, origin checks, signed commands, safety 
     assert.equal(vis.status, 200);
     assert.equal((await post("/api/vision/prune", { retentionMin: 30 }, family.token)).status, 200);
 
-    // guests may not edit automation
+    // guests may not edit automation, read raw telemetry trends, or read daily energy
     assert.equal((await post("/api/rules/toggle", { id: "rule_night", enabled: true }, guest.token)).status, 403);
     assert.equal((await post("/api/rules/toggle", { id: "rule_night", enabled: true }, family.token)).status, 200);
+    assert.equal((await fetch(base + "/api/telemetry", { headers: { Authorization: `Bearer ${guest.token}` } })).status, 403);
+    assert.equal((await fetch(base + "/api/energy/daily", { headers: { Authorization: `Bearer ${guest.token}` } })).status, 403);
+    assert.equal((await fetch(base + "/api/telemetry", { headers: { Authorization: `Bearer ${family.token}` } })).status, 200);
 
-    // guest snapshot filters appliances to Living Room and strips sensitive logs
+    // guest snapshot filters appliances to Living Room and strips sensitive logs, whole-home load, and chip ID
     const gSnap = await (await fetch(base + "/api/snapshot", { headers: { Authorization: `Bearer ${guest.token}` } })).json();
     assert.equal(gSnap.audit.length, 0);
     assert.equal(gSnap.visionEvents.length, 0);
     assert.equal(gSnap.rules.length, 0);
     assert.equal(gSnap.alerts.length, 0);
+    assert.equal(gSnap.virtual.padTempC, undefined);
+    assert.equal(gSnap.telem.uid, undefined);
+    assert.equal(gSnap.telem.away, false);
+    assert.equal(gSnap.mcuInfo, null);
     assert.ok(gSnap.virtual.appliances.every((a) => a.room === "Living Room"));
 
     // ---- energy model ----

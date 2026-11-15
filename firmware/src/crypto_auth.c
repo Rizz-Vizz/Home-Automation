@@ -294,8 +294,8 @@ static bool cmd_in(const char *cmd, const char *const *list, size_t n)
 bool CryptoAuth_IsAllowed(elly_role_t role, const char *cmd, const char *arg)
 {
     static const char *const kDiag[]   = { "ping", "audit_dump", "backfill_sync", "can_diag", "flash_id" };
-    static const char *const kGuest[]  = { "light", "rgb", "fan", "emergency" };
-    static const char *const kFamily[] = { "ac", "eco", "all_off", "night", "alert_test" };
+    static const char *const kGuest[]  = { "light", "rgb", "emergency" };
+    static const char *const kFamily[] = { "fan", "ac", "eco", "all_off", "night", "alert_test" };
     static const char *const kSystem[] = { "heartbeat", "trip" };
 
     if ((cmd == NULL) || (arg == NULL)) {

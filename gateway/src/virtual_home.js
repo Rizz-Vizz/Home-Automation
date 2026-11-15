@@ -93,7 +93,7 @@ const BASE_APPLIANCES = [
     watts: 42,
     hwSynced: "fan",
     matter: { nodeId: "model-0x07", clusters: ["FanControl (0x0202)", "OnOff (0x0006)"] },
-    assignedUsers: ["owner", "family", "guest"],
+    assignedUsers: ["owner", "family"],
     linkedRules: ["rule_vacancy"],
   },
   {
@@ -105,7 +105,7 @@ const BASE_APPLIANCES = [
     on: false,
     watts: 12,
     matter: { nodeId: "model-0x08", clusters: ["OnOff (0x0006)"] },
-    assignedUsers: ["owner", "family", "guest"],
+    assignedUsers: ["owner", "family"],
     linkedRules: ["rule_night"],
   },
   {
@@ -121,7 +121,7 @@ const BASE_APPLIANCES = [
     efficiencyPct: 84.0,
     faultInjected: false,
     matter: { nodeId: "model-0x09", clusters: ["ElectricalMeasurement (0x0B04)", "TemperatureMeasurement (0x0402)"] },
-    assignedUsers: ["owner", "family", "guest"],
+    assignedUsers: ["owner", "family"],
     linkedRules: ["rule_coil"],
   },
   {
@@ -133,7 +133,7 @@ const BASE_APPLIANCES = [
     on: true,
     watts: 65,
     matter: { nodeId: "model-0x0A", clusters: ["OnOff (0x0006)", "ElectricalMeasurement (0x0B04)"] },
-    assignedUsers: ["owner", "family", "guest"],
+    assignedUsers: ["owner", "family"],
     linkedRules: ["rule_vacancy"],
   },
 ];

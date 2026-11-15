@@ -47,7 +47,7 @@ Home Automation is a local-first smart home ecosystem built around the NXP FRDM-
    3. `vUartRxTask` (Priority 3): Ingests serial bytes, parses command packets, and dispatches authenticated requests to the cryptographic verification module.
    4. `vFlashTask` (Priority 1): Manages SPI communication with the external Winbond W25Q64 flash memory for telemetry buffering and tamper-evident audit logging.
 3. **Hardware Sensors and Peripherals:**
-   1. Ambient Light: Phototransistor connected to ADC0 channel 0, providing a 0 to 255 uncalibrated relative illumination index.
+   1. Ambient Light: Phototransistor connected to ADC0 channel 0, providing an uncalibrated relative illumination index (computed as volts x 600 against 1.8V reference, roughly between 0 and 1000).
    2. Acoustics: On-board PDM digital microphone decoded by a hardware decimation filter, outputting an uncalibrated relative sound level indicator on a 30 to 80 dB scale.
    3. RGB Actuator: CTIMER3 driving pins PIO4_17, PIO4_18, and PIO4_19 with three independent PWM channels for ambient and scene lighting.
    4. Motion and Orientation: InvenSense 6-axis I2C IMU reporting accelerometer vectors for tamper detection and vibration monitoring.

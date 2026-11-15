@@ -15,7 +15,7 @@ ENV = os.path.join(ROOT, "gateway", ".env")
 force = "--force" in sys.argv
 demo = "--demo" in sys.argv
 
-if (os.path.exists(HDR) or os.path.exists(ENV)) and not force:
+if os.path.exists(HDR) and os.path.exists(ENV) and not force:
     print("Secrets already exist. Use --force to rotate (you must re-flash the board).")
     sys.exit(0)
 

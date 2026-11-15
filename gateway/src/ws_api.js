@@ -78,12 +78,25 @@ export class WsApiServer {
     }
 
     if (r === "guest") {
-      if (filtered.virtual?.appliances) {
-        filtered.virtual = {
-          ...filtered.virtual,
-          appliances: filtered.virtual.appliances.filter((a) => a.room === "Living Room"),
-        };
+      const guestApps = (filtered.virtual?.appliances || []).filter((a) => a.room === "Living Room");
+      const livingWatts = Number(guestApps.reduce((sum, a) => sum + (a.on ? Number(a.currentWatts || a.watts || 0) : 0), 0).toFixed(1));
+
+      filtered.virtual = {
+        appliances: guestApps,
+        totalWatts: livingWatts,
+      };
+
+      if (filtered.telem) {
+        filtered.telem = { ...filtered.telem, away: false };
+        delete filtered.telem.uid;
       }
+
+      filtered.mcuInfo = null;
+      filtered.telemetryHistory = [];
+      filtered.dailyEnergy = [];
+      filtered.cloud = null;
+      filtered.cloudOnline = false;
+      filtered.mqttPublished = 0;
       filtered.audit = [];
       filtered.visionEvents = [];
       filtered.alerts = [];
@@ -140,6 +153,7 @@ export class WsApiServer {
           return send(200, { ...snap, role });
         }
         if (req.method === "GET" && url.pathname === "/api/telemetry") {
+          if (role === "guest") return send(403, { ok: false, err: "rbac_denied" });
           return send(200, { items: this.handlers.getTelemetry(limit) });
         }
         if (req.method === "GET" && url.pathname === "/api/audit") {
@@ -151,6 +165,7 @@ export class WsApiServer {
           return send(200, { items: this.handlers.getAlerts(limit) });
         }
         if (req.method === "GET" && url.pathname === "/api/energy/daily") {
+          if (role === "guest") return send(403, { ok: false, err: "rbac_denied" });
           return send(200, { items: this.handlers.getDailyEnergy() });
         }
         if (req.method === "GET" && url.pathname === "/api/energy/devices") {
@@ -266,47 +281,58 @@ export class WsApiServer {
     for (const client of this.wss.clients) {
       if (client.readyState === 1 && client.ellyRole) {
         const role = client.ellyRole;
-        if (payload.type === "snapshot") {
-          const filtered = this.filterSnapshotForRole(payload.data, role);
-          client.send(JSON.stringify({ ...payload, data: { ...filtered, role } }));
-        } else if (payload.type === "virtual") {
-          let vData = payload.data;
-          if (role === "guest" && vData?.appliances) {
-            vData = {
-              ...vData,
-              appliances: vData.appliances.filter((a) => a.room === "Living Room"),
-            };
-          }
-          const vMsg = { ...payload, data: vData };
-          if (role !== "owner") {
-            vMsg.audit = [];
-          }
-          client.send(JSON.stringify(vMsg));
-        } else if (payload.type === "audit") {
-          if (role === "owner") {
-            client.send(JSON.stringify(payload));
-          }
-        } else if (payload.type === "vision" || payload.type === "vision_event") {
-          if (role !== "guest") {
-            client.send(JSON.stringify(payload));
-          }
-        } else if (payload.type === "rules") {
-          if (role !== "guest") {
-            const rMsg = { ...payload };
-            if (role !== "owner") rMsg.audit = [];
-            client.send(JSON.stringify(rMsg));
-          }
-        } else if (payload.type === "alert" || payload.type === "alerts") {
-          if (role !== "guest") {
-            client.send(JSON.stringify(payload));
-          }
-        } else if (payload.type === "flash_id" || payload.type === "can" || payload.type === "backfill") {
-          if (role === "owner") {
-            client.send(JSON.stringify(payload));
-          }
-        } else {
-          client.send(JSON.stringify(payload));
+
+        // 1. Never leak audit rows to non-owners in ANY payload (cloud_status, virtual, rules, etc.)
+        let msg = payload;
+        if (role !== "owner" && msg.audit !== undefined) {
+          msg = { ...msg };
+          delete msg.audit;
         }
+
+        // 2. Strict allow-list for Guest role: living-room slice and basic sensor tiles only
+        if (role === "guest") {
+          if (msg.type === "snapshot") {
+            const filtered = this.filterSnapshotForRole(msg.data, "guest");
+            client.send(JSON.stringify({ ...msg, data: { ...filtered, role: "guest" } }));
+          } else if (msg.type === "virtual") {
+            const guestApps = (msg.data?.appliances || []).filter((a) => a.room === "Living Room");
+            const livingWatts = Number(guestApps.reduce((s, a) => s + (a.on ? Number(a.currentWatts || a.watts || 0) : 0), 0).toFixed(1));
+            client.send(JSON.stringify({
+              type: "virtual",
+              data: {
+                appliances: guestApps,
+                totalWatts: livingWatts,
+              },
+            }));
+          } else if (msg.type === "telem") {
+            const sTelem = { ...msg.data, away: false };
+            delete sTelem.uid;
+            client.send(JSON.stringify({ type: "telem", data: sTelem }));
+          } else if (msg.type === "serial_status" || msg.type === "ack") {
+            client.send(JSON.stringify(msg));
+          } else if (msg.type === "boot") {
+            client.send(JSON.stringify({ type: "boot", data: { fw: msg.data?.fw, status: "ready" } }));
+          }
+          // All other types (cloud_status, alert, alerts, vision, vision_event, rules, flash_id, can, backfill, audit) are blocked
+          continue;
+        }
+
+        // 3. Family role
+        if (role === "family") {
+          if (msg.type === "audit" || msg.type === "flash_id" || msg.type === "can" || msg.type === "backfill") {
+            continue; // Hardware Lab and flash diagnostics blocked
+          }
+          if (msg.type === "snapshot") {
+            const filtered = this.filterSnapshotForRole(msg.data, "family");
+            client.send(JSON.stringify({ ...msg, data: { ...filtered, role: "family" } }));
+            continue;
+          }
+          client.send(JSON.stringify(msg));
+          continue;
+        }
+
+        // 4. Owner role
+        client.send(JSON.stringify(msg));
       }
     }
   }
