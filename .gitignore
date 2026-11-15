@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production build outputs
+dist/
+*/dist/
+build/
+*/build/
+
+# Firmware build artifacts
+firmware/debug/
+firmware/build/
+*.bin
+*.elf
+*.hex
+*.axf
+*.map
+*.o
+*.d
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Python cache and artifacts
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local secrets and credentials (never commit secrets)
+gateway/.env
+dashboard/.env
+firmware/src/elly_secret.h
+gateway/certs/
+*.pem
+*.key
+
+# Local database runtime data
+gateway/data/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tmp
+*.bak
+
+# Editor and operating system files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini

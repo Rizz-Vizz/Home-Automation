@@ -1,0 +1,21 @@
+{
+  "name": "home-automation-gateway",
+  "version": "1.1.0",
+  "description": "Local MQTT, WebSocket, Serial, and SQLite bridge for Home Automation FRDM-MCXN236",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test tests/gateway.test.js"
+  },
+  "dependencies": {
+    "aedes": "1.2.0",
+    "dotenv": "18.0.10",
+    "mqtt": "5.16.1",
+    "serialport": "13.0.0",
+    "ws": "8.22.2"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
