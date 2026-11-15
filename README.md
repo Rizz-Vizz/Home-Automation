@@ -1,6 +1,6 @@
 # Home Automation
 
-A local first, privacy focused smart home and energy management hub powered by the NXP FRDM-MCXN236 microcontroller.
+A local first, privacy focused smart home and energy management hub powered by the [NXP FRDM-MCXN236](https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN236) microcontroller.
 
 ---
 
@@ -21,7 +21,7 @@ A local first, privacy focused smart home and energy management hub powered by t
 
 ## Hardware Platform: NXP FRDM-MCXN236
 
-This project is built using the official [NXP FRDM-MCXN236 Development Board](https://www.nxp.com/design/design-center/development-boards-and-designs/general-purpose-mcus/frdm-development-board-for-mcx-n23x-mcus:FRDM-MCXN236).
+This project is built using the official [NXP FRDM-MCXN236 Development Board](https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN236).
 
 | Hardware Feature | Specification on the FRDM-MCXN236 Board |
 | :--- | :--- |
@@ -109,7 +109,7 @@ The dashboard enforces role based access control with timing safe PIN verificati
 
 ### Hardware Requirements
 
-1. One NXP FRDM-MCXN236 development board.
+1. One [NXP FRDM-MCXN236](https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN236) development board.
 2. One standard USB Type-C data cable connected to port J17 (marked MCU-Link).
 3. A Windows, macOS, or Linux computer.
 

@@ -6,7 +6,7 @@ Security and privacy are core to the Home Automation project. This document expl
 
 ## Safety and Electrical Scope
 
-1. Educational System: This project is designed for learning, testing, and edge computing experiments using the NXP FRDM-MCXN236 development board.
+1. Educational System: This project is designed for learning, testing, and edge computing experiments using the [NXP FRDM-MCXN236](https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN236) development board.
 2. Low Voltage Only: The system directly controls low voltage 3.3V LEDs and runs software simulation models for household appliances. It is not rated or certified for direct connection to unisolated 110V or 230V household electrical mains without certified industrial relay modules.
 
 ---
