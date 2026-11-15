@@ -19,7 +19,7 @@ A local first, privacy focused smart home and energy management hub powered by t
 
 ---
 
-## Hardware Platform: [NXP FRDM-MCXN236](https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN236)
+## Hardware Platform
 
 | Hardware Feature | Specification on the FRDM-MCXN236 Board |
 | :--- | :--- |
