@@ -35,7 +35,7 @@ export function isFirmwareRoleAllowed(role, cmd, arg = "") {
   if (role === "owner") return cmd !== "trip";
   if (FW_GUEST.has(cmd)) return true;
   if (cmd === "privacy") return arg === "on" || role === "family";
-  if (role === "family") return FW_FAMILY.has(cmd) || FW_DIAG.has(cmd);
+  if (role === "family") return FW_FAMILY.has(cmd);
   return false;
 }
 

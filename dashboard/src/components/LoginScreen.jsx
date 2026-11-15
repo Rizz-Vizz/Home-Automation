@@ -30,7 +30,7 @@ export function LoginScreen({ onLogin, error }) {
           aria-label="PIN"
         />
         <div style={{ fontSize: "0.74rem", color: "var(--dim)", textAlign: "center", marginTop: -4 }}>
-          Demo PINs: <strong>1</strong> (Owner) &middot; <strong>2</strong> (Family) &middot; <strong>3</strong> (Guest)
+          Configured in <code>gateway/.env</code> (pass <code>--demo</code> to gen_secrets for 1/2/3)
         </div>
         {error && <div className="login-error">{error}</div>}
         <button className="btn primary" type="submit" disabled={busy || !pin}>

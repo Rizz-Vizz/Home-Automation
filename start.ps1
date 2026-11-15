@@ -1,5 +1,6 @@
 param(
-    [switch]$ProductionPreview
+    [switch]$ProductionPreview,
+    [switch]$Demo
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,7 +24,9 @@ if (-not (Test-Path (Join-Path $UiDir "node_modules"))) {
 
 if (-not (Test-Path (Join-Path $GwDir ".env"))) {
     Write-Host "No gateway\.env yet: generating secrets and login PINs..."
-    python (Join-Path $Root "firmware\tools\gen_secrets.py")
+    $genArgs = @((Join-Path $Root "firmware\tools\gen_secrets.py"))
+    if ($Demo) { $genArgs += "--demo" }
+    python @genArgs
     Write-Host "Rebuild and flash the firmware now: .\flash-board.ps1 -Build"
 }
 
@@ -43,5 +46,5 @@ Write-Host ""
 Write-Host "Home Automation started successfully:"
 Write-Host "  Gateway       : http://127.0.0.1:8080/api/health"
 Write-Host "  Dashboard URL : http://127.0.0.1:5173"
-Write-Host "  Demo PINs     : 1 (Owner), 2 (Family), 3 (Guest)"
+Write-Host "  Login PINs    : Defined in gateway\.env (1/2/3 when run with -Demo)"
 Write-Host "To stop both: Stop-Process -Id $($gwProc.Id),$($uiProc.Id)"

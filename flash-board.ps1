@@ -1,5 +1,6 @@
 param(
     [switch]$Build,
+    [switch]$Demo,
     [string]$Device = "MCXN236:FRDM-MCXN236",
     [string]$LinkServer = $(if ($env:LINKSERVER_PATH) { $env:LINKSERVER_PATH } else { "C:\nxp\LinkServer_26.9.130\LinkServer.exe" })
 )
@@ -8,8 +9,15 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $FwDir = Join-Path $Root "firmware"
 $ElfPath = Join-Path $FwDir "debug\elly_edge_fw.elf"
+$SecretHeader = Join-Path $FwDir "src\elly_secret.h"
 
 if ($Build) {
+    if (-not (Test-Path $SecretHeader)) {
+        Write-Host "No elly_secret.h found. Auto-generating cryptographic secrets..."
+        $genArgs = @((Join-Path $Root "firmware\tools\gen_secrets.py"))
+        if ($Demo) { $genArgs += "--demo" }
+        python @genArgs
+    }
     Push-Location $FwDir
     try {
         cmake --preset debug

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import { WebSocketServer } from "ws";
+import { normalizeRole } from "./hmac.js";
 
 const MAX_BODY = 65536;
 
@@ -64,6 +65,40 @@ export class WsApiServer {
     return m ? { token: m[1], ...(this.auth.verify(m[1]) || {}) } : null;
   }
 
+  filterSnapshotForRole(snapshot, role) {
+    if (!snapshot) return snapshot;
+    const r = normalizeRole(role);
+    if (r === "owner") return snapshot;
+
+    const filtered = { ...snapshot };
+
+    if (r === "family") {
+      filtered.audit = [];
+      return filtered;
+    }
+
+    if (r === "guest") {
+      if (filtered.virtual?.appliances) {
+        filtered.virtual = {
+          ...filtered.virtual,
+          appliances: filtered.virtual.appliances.filter((a) => a.room === "Living Room"),
+        };
+      }
+      filtered.audit = [];
+      filtered.visionEvents = [];
+      filtered.alerts = [];
+      filtered.rules = [];
+      if (filtered.deviceEnergy) {
+        filtered.deviceEnergy = filtered.deviceEnergy.filter(
+          (d) => d.id === "light_hub" || d.id === "plug_tv" || d.id === "lamp_living"
+        );
+      }
+      return filtered;
+    }
+
+    return filtered;
+  }
+
   async start() {
     const handler = async (req, res) => {
       const origin = req.headers.origin;
@@ -101,28 +136,36 @@ export class WsApiServer {
           return send(200, { ok: true });
         }
         if (req.method === "GET" && url.pathname === "/api/snapshot") {
-          return send(200, { ...this.handlers.getSnapshot(), role });
+          const snap = this.filterSnapshotForRole(this.handlers.getSnapshot(), role);
+          return send(200, { ...snap, role });
         }
         if (req.method === "GET" && url.pathname === "/api/telemetry") {
           return send(200, { items: this.handlers.getTelemetry(limit) });
         }
         if (req.method === "GET" && url.pathname === "/api/audit") {
-          if (role === "guest") return send(403, { ok: false, err: "rbac_denied" });
+          if (role !== "owner") return send(403, { ok: false, err: "rbac_denied" });
           return send(200, { items: this.handlers.getAudit(limit) });
         }
         if (req.method === "GET" && url.pathname === "/api/alerts") {
+          if (role === "guest") return send(403, { ok: false, err: "rbac_denied" });
           return send(200, { items: this.handlers.getAlerts(limit) });
         }
         if (req.method === "GET" && url.pathname === "/api/energy/daily") {
           return send(200, { items: this.handlers.getDailyEnergy() });
         }
         if (req.method === "GET" && url.pathname === "/api/energy/devices") {
-          return send(200, { items: this.handlers.getDeviceEnergy?.() || [] });
+          let items = this.handlers.getDeviceEnergy?.() || [];
+          if (role === "guest") {
+            items = items.filter((d) => d.id === "light_hub" || d.id === "plug_tv" || d.id === "lamp_living");
+          }
+          return send(200, { items });
         }
         if (req.method === "GET" && url.pathname === "/api/rules") {
+          if (role === "guest") return send(403, { ok: false, err: "rbac_denied" });
           return send(200, { items: this.handlers.getRules?.() || [] });
         }
         if (req.method === "POST" && url.pathname === "/api/rules/toggle") {
+          if (role === "guest") return send(403, { ok: false, err: "rbac_denied" });
           const body = await readJsonBody(req);
           const result = await this.handlers.toggleRule({ ...body, role });
           return send(result.httpStatus || (result.ok ? 200 : 400), result);
@@ -195,7 +238,8 @@ export class WsApiServer {
           ws.ellyRole = s.role;
           ws.ellyToken = msg.token;
           clearTimeout(authTimer);
-          ws.send(JSON.stringify({ type: "snapshot", data: { ...this.handlers.getSnapshot(), role: s.role } }));
+          const snap = this.filterSnapshotForRole(this.handlers.getSnapshot(), s.role);
+          ws.send(JSON.stringify({ type: "snapshot", data: { ...snap, role: s.role } }));
           return;
         }
         // Session may have been logged out or expired since the socket opened
@@ -219,10 +263,50 @@ export class WsApiServer {
 
   broadcast(payload) {
     if (!this.wss) return;
-    const wire = JSON.stringify(payload);
     for (const client of this.wss.clients) {
       if (client.readyState === 1 && client.ellyRole) {
-        client.send(wire);
+        const role = client.ellyRole;
+        if (payload.type === "snapshot") {
+          const filtered = this.filterSnapshotForRole(payload.data, role);
+          client.send(JSON.stringify({ ...payload, data: { ...filtered, role } }));
+        } else if (payload.type === "virtual") {
+          let vData = payload.data;
+          if (role === "guest" && vData?.appliances) {
+            vData = {
+              ...vData,
+              appliances: vData.appliances.filter((a) => a.room === "Living Room"),
+            };
+          }
+          const vMsg = { ...payload, data: vData };
+          if (role !== "owner") {
+            vMsg.audit = [];
+          }
+          client.send(JSON.stringify(vMsg));
+        } else if (payload.type === "audit") {
+          if (role === "owner") {
+            client.send(JSON.stringify(payload));
+          }
+        } else if (payload.type === "vision" || payload.type === "vision_event") {
+          if (role !== "guest") {
+            client.send(JSON.stringify(payload));
+          }
+        } else if (payload.type === "rules") {
+          if (role !== "guest") {
+            const rMsg = { ...payload };
+            if (role !== "owner") rMsg.audit = [];
+            client.send(JSON.stringify(rMsg));
+          }
+        } else if (payload.type === "alert" || payload.type === "alerts") {
+          if (role !== "guest") {
+            client.send(JSON.stringify(payload));
+          }
+        } else if (payload.type === "flash_id" || payload.type === "can" || payload.type === "backfill") {
+          if (role === "owner") {
+            client.send(JSON.stringify(payload));
+          }
+        } else {
+          client.send(JSON.stringify(payload));
+        }
       }
     }
   }

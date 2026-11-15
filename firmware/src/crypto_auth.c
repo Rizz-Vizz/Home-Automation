@@ -321,8 +321,7 @@ bool CryptoAuth_IsAllowed(elly_role_t role, const char *cmd, const char *arg)
         return (strcmp(arg, "on") == 0) || (role == ELLY_ROLE_FAMILY);
     }
     if (role == ELLY_ROLE_FAMILY) {
-        return cmd_in(cmd, kFamily, sizeof(kFamily) / sizeof(kFamily[0])) ||
-               cmd_in(cmd, kDiag, sizeof(kDiag) / sizeof(kDiag[0]));
+        return cmd_in(cmd, kFamily, sizeof(kFamily) / sizeof(kFamily[0]));
     }
     return false;
 }

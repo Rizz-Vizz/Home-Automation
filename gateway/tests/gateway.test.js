@@ -50,6 +50,11 @@ test("RBAC: safety stays open to everyone, risky controls do not, internals are 
   assert.equal(isRoleAllowed("guest", "away_disarm"), false);
   assert.equal(isRoleAllowed("guest", "pad_tx"), false);
   assert.equal(isRoleAllowed("guest", "audit_dump"), false);
+  assert.equal(isRoleAllowed("family", "audit_dump"), false);
+  assert.equal(isRoleAllowed("family", "can_diag"), false);
+  assert.equal(isRoleAllowed("family", "flash_id"), false);
+  assert.equal(isRoleAllowed("owner", "audit_dump"), true);
+  assert.equal(isRoleAllowed("owner", "can_diag"), true);
   assert.equal(isRoleAllowed("family", "energy_saver"), true);
   assert.equal(isRoleAllowed("family", "safety_clear"), false);
   assert.equal(isRoleAllowed("owner", "safety_clear"), true);
@@ -184,6 +189,9 @@ test("Gateway: login, server-side roles, origin checks, signed commands, safety 
 
     // guests cannot read the audit trail or push camera events
     assert.equal((await fetch(base + "/api/audit", { headers: { Authorization: `Bearer ${guest.token}` } })).status, 403);
+    assert.equal((await fetch(base + "/api/audit", { headers: { Authorization: `Bearer ${family.token}` } })).status, 403);
+    assert.equal((await fetch(base + "/api/audit", { headers: { Authorization: `Bearer ${owner.token}` } })).status, 200);
+    assert.equal((await post("/api/cmd", { cmd: "audit_dump" }, family.token)).status, 403);
     assert.equal((await post("/api/vision/event", { summary: "x" }, guest.token)).status, 403);
     const vis = await post("/api/vision/event", { summary: "Person near foyer", motionScore: 24.5, armed: true }, owner.token);
     assert.equal(vis.status, 200);
@@ -192,6 +200,14 @@ test("Gateway: login, server-side roles, origin checks, signed commands, safety 
     // guests may not edit automation
     assert.equal((await post("/api/rules/toggle", { id: "rule_night", enabled: true }, guest.token)).status, 403);
     assert.equal((await post("/api/rules/toggle", { id: "rule_night", enabled: true }, family.token)).status, 200);
+
+    // guest snapshot filters appliances to Living Room and strips sensitive logs
+    const gSnap = await (await fetch(base + "/api/snapshot", { headers: { Authorization: `Bearer ${guest.token}` } })).json();
+    assert.equal(gSnap.audit.length, 0);
+    assert.equal(gSnap.visionEvents.length, 0);
+    assert.equal(gSnap.rules.length, 0);
+    assert.equal(gSnap.alerts.length, 0);
+    assert.ok(gSnap.virtual.appliances.every((a) => a.room === "Living Room"));
 
     // ---- energy model ----
     gw.home.setAppliance("ac_living", true, { acMode: "cool" });

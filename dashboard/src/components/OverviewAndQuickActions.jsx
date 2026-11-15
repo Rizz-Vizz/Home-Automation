@@ -99,13 +99,13 @@ export function OverviewAndQuickActions({ snapshot, role, onAction }) {
             {lux !== null ? (
               <>
                 {lux.toFixed(0)}
-                <span className="telem-primary-unit">lx</span>
+                <span className="telem-primary-unit">idx</span>
               </>
             ) : (
               "--"
             )}
           </div>
-          <div className="telem-primary-sub">{luxState}</div>
+          <div className="telem-primary-sub">{luxState} (Q2 phototransistor)</div>
         </div>
 
         {/* Cell 4: Security & Audio */}
@@ -120,7 +120,7 @@ export function OverviewAndQuickActions({ snapshot, role, onAction }) {
             {securityStatus}
           </div>
           <div className="telem-primary-sub">
-            Sound {dbVal !== null ? `${dbVal} dB` : "--"} · Vib {vibMg} mg
+            Sound {dbVal !== null ? `${dbVal} rel dB` : "--"} · Vib {vibMg} mg
           </div>
         </div>
       </div>
