@@ -15,7 +15,22 @@ A local first, privacy focused smart home and energy management hub powered by t
 
 ## Demonstration Video
 
+[![Watch the Demonstration Video](https://img.youtube.com/vi/_sbf_1YPuEw/maxresdefault.jpg)](https://www.youtube.com/watch?v=_sbf_1YPuEw)
 
+[Click here to watch the full Demonstration Video on YouTube](https://www.youtube.com/watch?v=_sbf_1YPuEw)
+
+---
+
+## Dashboard Previews
+
+### Home Command Center
+![Home Command Center](IMG/1.png)
+
+### Energy Management and Automation Rules
+![Energy Management and Automation Rules](IMG/2.png)
+
+### Smart Vision and Security Monitoring
+![Smart Vision and Security Monitoring](IMG/3.png)
 
 ---
 
